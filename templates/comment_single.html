@@ -1,0 +1,15 @@
+<div id="comment-{{ comment.pk }}" class="card-body">
+    <blockquote class="blockquote mb-0">
+        <p>{{ comment.comment }}</p>
+        <footer class="blockquote-footer">
+            {{ comment.author }}
+            {% if comment.author == user %}
+                <a 
+                   hx-get="{% url 'edit_comment' comment.pk %}"
+                   hx-target="#comment-{{ comment.pk }}"
+                   hx-swap="outerHTML"
+                   class="btn btn-sm btn-link">✏️</a>
+            {% endif %}
+        </footer>
+    </blockquote>
+</div>

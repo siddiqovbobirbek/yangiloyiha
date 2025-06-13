@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h5>Javob yozish: "{{ parent.comment }}"</h5>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary btn-sm">Yuborish</button>
+    </form>
+{% endblock %}
