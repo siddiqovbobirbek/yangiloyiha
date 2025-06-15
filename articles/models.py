@@ -22,6 +22,11 @@ class Article(models.Model):
     @property
     def like_count(self):
         return self.likes.count()
+    
+    @property
+    def average_rating(self):
+        avg = self.ratings.aggregate(models.Avg('rating'))['rating__avg']
+        return round(avg, 1) if avg else 0
 
 
 class ArticleLike(models.Model):
@@ -55,11 +60,13 @@ class Comment(models.Model):
     def like_count(self):
         return self.likes.count()
 
+class ArticleRating(models.Model):
+    article = models.ForeignKey(Article, related_name='ratings', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.PositiveIntegerField()
 
-class ArticleLike(models.Model):
-    article = models.ForeignKey(Article, related_name='likes', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    session_key = models.CharField(max_length=40, null=True, blank=True)
+    class Meta:
+        unique_together = ('article', 'user')  
 
-    # class Meta:
-    #     unique_together = ('article', 'user', 'session_key')
+
+

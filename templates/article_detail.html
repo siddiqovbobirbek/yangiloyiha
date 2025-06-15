@@ -21,6 +21,62 @@
                 <a href="{% url 'article_list' %}" class="btn btn-outline-primary btn-sm">Barcha postlar</a>
             </div>
 
+            <div>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <p><strong>O‘rtacha reyting:</strong> {{ object.average_rating }} ⭐</p>
+
+                {% if user.is_authenticated %}
+                <form method="POST" action="{% url 'rate_article' object.id %}" id="rating-form">
+                    {% csrf_token %}
+                    <div id="star-rating">
+                        {% for i in rating_range %}
+                            <span class="star {% if user_rating and user_rating >= i %}selected{% endif %}" data-value="{{ i }}">&#9733;</span>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="rating" id="rating-value">
+                    <button type="submit" class="btn btn-warning btn-sm">⭐ Reytingni yuborish</button>
+                </form>
+                <style>
+                  .star {
+                    font-size: 30px;
+                    color: #ccc;
+                    cursor: pointer;
+                    transition: color 0.2s;
+                  }
+                  .star.selected,
+                  .star.hovered {
+                    color: gold;
+                  }
+                </style>
+                <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                  const stars = document.querySelectorAll('#star-rating .star');
+                  const ratingInput = document.getElementById('rating-value');
+                  stars.forEach((star, index) => {
+                    star.addEventListener('mouseenter', () => {
+                      stars.forEach((s, i) => s.classList.toggle('hovered', i <= index));
+                    });
+                    star.addEventListener('mouseleave', () => {
+                      stars.forEach(s => s.classList.remove('hovered'));
+                    });
+                    star.addEventListener('click', () => {
+                      const value = star.dataset.value;
+                      ratingInput.value = value;
+                      stars.forEach((s, i) => s.classList.toggle('selected', i < value));
+                    });
+                  });
+                });
+                </script>
+                {% else %}
+                <p><a href="{% url 'login' %}">Kirish</a> orqali reyting qo‘shing.</p>
+                {% endif %}
+            </div>
+
             <div class="mt-3">
                 <span id="article-like-btn" data-article-id="{{ object.id }}" style="cursor: pointer; font-size: 24px;">
                     {% if has_liked %}❤️{% else %}🤍{% endif %}

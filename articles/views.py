@@ -1,13 +1,24 @@
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import UpdateView, DeleteView, CreateView
-from .models import Article, Comment, ArticleLike
+from .models import Article, Comment, ArticleLike, ArticleRating
+from django.shortcuts import get_object_or_404, redirect, render
+from .forms import CommentForm    
 from django.urls import reverse_lazy
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages 
+
 
 class ArticleListView(ListView):
     model = Article
     template_name = 'article_list.html'
     context_object_name = 'articles'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['rating_range'] = range(1, 6)
+        return context
         
         
     def get_context_data(self, **kwargs):
@@ -54,7 +65,18 @@ class ArticleDetailView(DetailView):
             user=user if user.is_authenticated else None,
             session_key=None if user.is_authenticated else session_key
         ).exists()
+        
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        article = self.get_object()
+        user = self.request.user
 
+        context['rating_range'] = range(1, 6)
+        if user.is_authenticated:
+            rating_obj = ArticleRating.objects.filter(article=article, user=user).first()
+            context['user_rating'] = rating_obj.rating if rating_obj else 0
+        else:
+            context['user_rating'] = 0
         return context
     
         
@@ -89,12 +111,7 @@ class ArticleCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
     
     
-    
-    
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .models import Comment, Article
-from django.urls import reverse_lazy
+
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
     model = Comment
@@ -135,10 +152,6 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return comment.author == self.request.user
 
 
-
-from django.shortcuts import get_object_or_404, redirect, render
-from .models import Article, Comment
-from .forms import CommentForm
 
 def reply_comment(request, comment_id):
     parent_comment = get_object_or_404(Comment, id=comment_id)
@@ -193,3 +206,36 @@ def toggle_like(request, pk):
 
     like_count = ArticleLike.objects.filter(article=article).count()
     return JsonResponse({'liked': liked, 'like_count': like_count})
+
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from .models import Article, ArticleRating
+
+@login_required
+def rate_article(request, article_id):
+    article = get_object_or_404(Article, id=article_id)
+
+    if request.method == 'POST':
+        rating_val = request.POST.get('rating')
+        if rating_val and rating_val.isdigit():
+            rating_val = int(rating_val)
+            if 1 <= rating_val <= 5:
+                rating_obj, created = ArticleRating.objects.get_or_create(
+                    article=article,
+                    user=request.user,
+                    defaults={'rating': rating_val}
+                )
+                if not created:
+                    rating_obj.rating = rating_val
+                    rating_obj.save()
+
+                messages.success(request, f"{rating_val} ⭐ reyting saqlandi.")
+            else:
+                messages.error(request, "1 dan 5 gacha baho bering.")
+        else:
+            messages.error(request, "Reyting yuborilmadi.")
+    return redirect('article_detail', pk=article.id)
+

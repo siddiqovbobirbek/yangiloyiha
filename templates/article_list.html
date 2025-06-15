@@ -27,6 +27,19 @@
                         <span id="article-like-count-{{ article.id }}" class="small text-muted ml-1">{{ article.like_count }} ta</span>
                     </div>
                 </div>
+
+                <!-- ⭐ Reyting yulduzchalar -->
+                <div class="mt-2">
+                    <small class="text-muted">Reyting:</small>
+                    {% for i in rating_range %}
+                        {% if article.average_rating >= i %}
+                            <span style="color: gold; font-size: 18px;">&#9733;</span>
+                        {% else %}
+                            <span style="color: #ccc; font-size: 18px;">&#9733;</span>
+                        {% endif %}
+                    {% endfor %}
+                    <small class="text-muted ml-1">({{ article.average_rating }})</small>
+                </div>
             </div>
         </div>
     {% endfor %}
