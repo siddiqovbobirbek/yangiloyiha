@@ -26,7 +26,8 @@ env.read_env()
 SECRET_KEY = env.str('SECRET_KEY', default=get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG', default=False)
+# DEBUG = env.bool('DEBUG', default=False)
+DEBUG = True
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[''])
 
@@ -161,7 +162,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-# STATICFILES_DIRS = [str(BASE_DIR.joinpath('staticfiles'))]
+STATICFILES_DIRS = [str(BASE_DIR.joinpath('staticfiles'))]
 STATIC_ROOT = BASE_DIR / 'static'
 # print(STATICFILES_DIRS, STATIC_ROOT)
 # STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'

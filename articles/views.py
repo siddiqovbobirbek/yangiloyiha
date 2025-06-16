@@ -36,25 +36,21 @@ class ArticleListView(ListView):
         
         return context
 
+    
+    
 class ArticleDetailView(DetailView):
     model = Article
     template_name = 'article_detail.html'
-    
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         article = self.get_object()
-        context['parent_comments'] = article.comments.filter(parent__isnull=True)
-        return context
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        article = self.get_object()
+        user = self.request.user
 
         # Faqat parent izohlar
         context['parent_comments'] = article.comments.filter(parent__isnull=True).order_by('id')
 
-        user = self.request.user
+        # Like status
         session_key = self.request.session.session_key
         if not session_key:
             self.request.session.create()
@@ -65,19 +61,17 @@ class ArticleDetailView(DetailView):
             user=user if user.is_authenticated else None,
             session_key=None if user.is_authenticated else session_key
         ).exists()
-        
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        article = self.get_object()
-        user = self.request.user
 
+        # Rating
         context['rating_range'] = range(1, 6)
         if user.is_authenticated:
             rating_obj = ArticleRating.objects.filter(article=article, user=user).first()
             context['user_rating'] = rating_obj.rating if rating_obj else 0
         else:
             context['user_rating'] = 0
+
         return context
+
     
         
 
